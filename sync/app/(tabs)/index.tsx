@@ -1,74 +1,163 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+interface Exercise {
+  id: string;
+  name: string;
+  sets: Array<{
+    reps: number;
+    weight: number;
+  }>;
+}
 
-export default function HomeScreen() {
+export default function WorkoutScreen() {
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+
+  const addExercise = () => {
+    const newExercise: Exercise = {
+      id: Date.now().toString(),
+      name: 'New Exercise',
+      sets: [{ reps: 0, weight: 0 }],
+    };
+    setExercises([...exercises, newExercise]);
+  };
+
+  const addSet = (exerciseId: string) => {
+    setExercises(exercises.map(ex => {
+      if (ex.id === exerciseId) {
+        return {
+          ...ex,
+          sets: [...ex.sets, { reps: 0, weight: 0 }]
+        };
+      }
+      return ex;
+    }));
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.title}>Today's Workout</Text>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={addExercise}
+          >
+            <IconSymbol name="plus" size={24} color="#007AFF" />
+            <Text style={styles.addButtonText}>Add Exercise</Text>
+          </TouchableOpacity>
+        </View>
+
+        {exercises.map(exercise => (
+          <View key={exercise.id} style={styles.exerciseCard}>
+            <Text style={styles.exerciseName}>{exercise.name}</Text>
+            
+            {exercise.sets.map((set, index) => (
+              <View key={index} style={styles.setRow}>
+                <Text style={styles.setNumber}>Set {index + 1}</Text>
+                <View style={styles.setDetails}>
+                  <Text>{set.reps} reps</Text>
+                  <Text>{set.weight} lbs</Text>
+                </View>
+              </View>
+            ))}
+            
+            <TouchableOpacity 
+              style={styles.addSetButton}
+              onPress={() => addSet(exercise.id)}
+            >
+              <Text style={styles.addSetText}>Add Set</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+
+        {exercises.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>
+              No exercises added yet. Tap the + button to start your workout.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#f0f0f0',
+    padding: 8,
+    borderRadius: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  addButtonText: {
+    marginLeft: 8,
+    color: '#007AFF',
+    fontWeight: '500',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  exerciseCard: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  exerciseName: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  setRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  setNumber: {
+    fontWeight: '500',
+  },
+  setDetails: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  addSetButton: {
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: '#e8e8e8',
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  addSetText: {
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  emptyState: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    textAlign: 'center',
+    color: '#666',
   },
 });
